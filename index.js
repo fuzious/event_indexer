@@ -43,6 +43,7 @@ async function getAllEvents(blockNumber) {
         if (txReceipt.logs.length == 0) {
             return;
         }
+        // fetch contract address from logs
         let contractAddress =txReceipt.logs[0].address;
         let contract = new Contract (ERC20ABI,contractAddress);
         txReceipt.logs.forEach(async(log) =>  {
@@ -50,6 +51,8 @@ async function getAllEvents(blockNumber) {
                 // this hash identifies a transfer event
                 if (log.topics[0]!='0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef') 
                     return;
+
+                // fetching symbols and details of transactions
                 let symbol = await contract.methods.symbol().call();
                 let from = '0x'+log.topics[1].substr(26);
                 let to = '0x'+log.topics[2].substr(26);
@@ -58,8 +61,12 @@ async function getAllEvents(blockNumber) {
                 if (amount.isNaN()) {
                     throw 'not erc20';
                 }
+
+                // dividing tokens by 10^decimal 
                 amount = amount.dividedBy(Math.pow(10,decimal));
                 console.log(log.transactionHash,amount.toFixed().toString(),symbol,from,to);
+
+                // persisting to DB
                 mysqlConnection.query(`INSERT INTO event_index.tx_log (tx_hash,logIndex,sender,receiver,amount,token) VALUES ("${log.transactionHash}","${log.logIndex}","${from}","${to}","${log.transactionHash,amount.toFixed().toString()}","${symbol}")`, (err, rows, fields) => {
                     if (err)
                         console.log(err);
