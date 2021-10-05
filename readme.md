@@ -30,7 +30,8 @@ For each contract interacting transaction, fetch the logs and then for each `tra
 -  Create DB with name `event_index` in mysql 
 -  Configure dotenv
 -  `npm run start`
--  Sample Get request:  `http://localhost:3000/fetchSendersDetails?sender=0xb07098db26ea326d82d9b5b34520535fdb8980b8`
+-  Sample Get request:  
+`http://localhost:3000/fetchSendersDetails?sender=0xb07098db26ea326d82d9b5b34520535fdb8980b8`
 -  Sample response:
 ```
 {
