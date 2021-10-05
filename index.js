@@ -1,19 +1,25 @@
 const Web3 = require('web3');
 const {ERC20ABI} = require('./erc20Abi.js');
-const rpcURL = "wss://mainnet.infura.io/ws/v3/5ead597854fc415d97a3626c3fa39fb3"
+const rpcURL = "wss://eth-rinkeby.alchemyapi.io/v2/BJe-5iMb10QsmZxQihjZ9DGU6lc2EBhN"
 const web3 = new Web3(rpcURL);
 const Contract = web3.eth.Contract;
 const BigNumber = require('bignumber.js');
 const mysql = require('mysql');
+const express = require("express");
+const  app = express();
+require('dotenv').config()
+
+app.use(express.json());
+
 
 // connect to DB
 var mysqlConnection = mysql.createConnection({
-    host: 'localhost',
-    user: 'root',
-    password: 'arpit',
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASS,
     database: 'event_index',
     multipleStatements: true
-    });
+});
 
 mysqlConnection.connect((err)=> {
     if(!err)
@@ -64,7 +70,7 @@ async function getAllEvents(blockNumber) {
 
                 // dividing tokens by 10^decimal 
                 amount = amount.dividedBy(Math.pow(10,decimal));
-                console.log(log.transactionHash,amount.toFixed().toString(),symbol,from,to);
+                // console.log(log.transactionHash,amount.toFixed().toString(),symbol,from,to);
 
                 // persisting to DB
                 mysqlConnection.query(`INSERT INTO event_index.tx_log (tx_hash,logIndex,sender,receiver,amount,token) VALUES ("${log.transactionHash}","${log.logIndex}","${from}","${to}","${log.transactionHash,amount.toFixed().toString()}","${symbol}")`, (err, rows, fields) => {
@@ -79,5 +85,19 @@ async function getAllEvents(blockNumber) {
     });
 }
 
+app.get("/fetchSendersDetails", (req, res, next) => {
+    console.log(req.query.sender);
+    mysqlConnection.query(`select * from event_index.tx_log where sender = "${req.query.sender}"`, (err, rows, fields) => {
+        if (!err) {
 
+            res.send({'all_txs':rows,'transfer_count':rows.length});
+        } else {
+            res.send(err)
+        }
+    })
+});
 
+// start server
+app.listen(3000, () => {
+    console.log("Server running on port 3000");
+});
